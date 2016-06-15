@@ -60,3 +60,6 @@ paper/*.aux
 paper/*.log
 paper/*.out
 paper/*.pdf
+
+db
+node_modules

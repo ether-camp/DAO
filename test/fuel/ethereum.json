@@ -1,0 +1,33 @@
+{
+  "contracts": "contracts",
+  
+  "env": {
+    "block": {
+      "coinbase" : "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+      "difficulty" : "0x0100",
+      "gasLimit" : 314159200,
+      "gasPrice": 600000000
+    },
+    "accounts": {
+      "0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826": {
+        "name": "curator",
+        "balance": 1000000000000000000000000,
+        "nonce": "1430",
+        "pkey": "cow",
+        "default": true
+      },
+      "0x3992e68ccc25ba61fa46730f0c1f3069ddfef39d": {
+        "name": "participant1",
+        "balance": 100000000000000000000000000000,
+        "pkey": "participant1",
+        "default": false
+      },
+      "0x400ca360444187bd7507ec05d18fa1e833304b9f": {
+        "name": "participant2",
+        "balance": 100000000000000000000000000000,
+        "pkey": "participant2",
+        "default": false
+      }
+    }
+  }
+}
