@@ -30,9 +30,11 @@ contract DAOInterface {
     // creation by calling the fallback function will still get their ether back
     uint constant creationGracePeriod = 40 days;
     // The minimum debate period that a generic proposal can have
-    uint constant minProposalDebatePeriod = 2 weeks;
+    //uint constant minProposalDebatePeriod = 2 weeks;
+    uint constant minProposalDebatePeriod = 1; // for testing
     // The minimum debate period that a split proposal can have
-    uint constant minSplitDebatePeriod = 1 weeks;
+    //uint constant minSplitDebatePeriod = 1 weeks;
+    uint constant minSplitDebatePeriod = 1; // for testing
     // Period of days inside which it's possible to execute a DAO split
     uint constant splitExecutionPeriod = 27 days;
     // Period of time after which the minimum Quorum is halved

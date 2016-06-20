@@ -87,7 +87,7 @@ describe('Fuel', function() {
       },
       function(err) {
         if (err) return done(err);
-        console.log('total ' + dao.totalSupply.call());
+        console.log('total ' + dao.totalSupply());
         assert(dao.isFueled(), 'DAO is not fueled');
         done();
       }

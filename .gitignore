@@ -63,3 +63,4 @@ paper/*.pdf
 
 db
 node_modules
+mochawesome-reports
