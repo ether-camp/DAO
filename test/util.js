@@ -1,5 +1,4 @@
 var fs = require('fs');
-var assert = require('assert');
 var _ = require('lodash');
 var solc = require('solc');
 
