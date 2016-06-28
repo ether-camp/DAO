@@ -3,9 +3,9 @@ var _ = require('lodash');
 var async = require('async');
 var Sandbox = require('ethereum-sandbox-client');
 var SolidityFunction = require('web3/lib/web3/function');
-var util = require('../util');
+var helper = require('ethereum-sandbox-helper');
 
-describe('Deposit', function() {
+describe('Deposit proposal', function() {
   this.timeout(60000);
   
   var curator = '0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826';
@@ -21,7 +21,7 @@ describe('Deposit', function() {
   ];
   var recipient = '0xdedb49385ad5b94a16f236a6890cf9e0b1e30392';
   var sandbox = new Sandbox('http://localhost:8555');
-  var compiled = util.compile('.', ['DAO.sol']);
+  var compiled = helper.compile('.', ['DAO.sol']);
   var creator, dao, proposalBytecode, proposalId;
   
   before(function(done) {
@@ -80,7 +80,7 @@ describe('Deposit', function() {
             value: sandbox.web3.toWei(participant.amount, "ether")
           }, function(err, txHash) {
             if (err) cb(err);
-            else util.waitForReceipt(sandbox.web3, txHash, cb);
+            else helper.waitForReceipt(sandbox.web3, txHash, cb);
           });
         },
         cb
@@ -99,7 +99,7 @@ describe('Deposit', function() {
   it('Allow the recipient', function(done) {
     dao.changeAllowedRecipients(recipient, true, { from: curator }, function(err, txHash) {
       if (err) done(err);
-      else util.waitForReceipt(sandbox.web3, txHash, function(err) {
+      else helper.waitForReceipt(sandbox.web3, txHash, function(err) {
         if (err) return done(err);
         assert(dao.allowedRecipients(recipient), 'The recipient is not allowed');
         done();
@@ -123,7 +123,7 @@ describe('Deposit', function() {
       },
       function(err, txHash) {
         if (err) done(err);
-        else util.waitForReceipt(sandbox.web3, txHash, function(err, receipt) {
+        else helper.waitForReceipt(sandbox.web3, txHash, function(err, receipt) {
           if (err) return done(err);
           assert.equal(dao.numberOfProposals(), 1, 'Proposal has not been created');
           proposalId = 1;
@@ -139,7 +139,7 @@ describe('Deposit', function() {
       function(participant, cb) {
         dao.vote(proposalId, true, { from: participant.address }, function(err, txHash) {
           if (err) cb(err);
-          else util.waitForReceipt(sandbox.web3, txHash, cb);
+          else helper.waitForReceipt(sandbox.web3, txHash, cb);
         });
       },
       function(err) {
@@ -163,7 +163,7 @@ describe('Deposit', function() {
       from: participants[0].address
     }, function(err, txHash) {
       if (err) done(err);
-      else util.waitForReceipt(sandbox.web3, txHash, function(err, receipt) {
+      else helper.waitForReceipt(sandbox.web3, txHash, function(err, receipt) {
         if (err) return done(err);
         assert(!dao.proposals(proposalId)[4], 'The proposal is not closed');
         assert(dao.proposals(proposalId)[5], 'The proposal has not passed');

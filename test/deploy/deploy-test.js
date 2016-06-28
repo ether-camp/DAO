@@ -1,6 +1,6 @@
 var _ = require('lodash');
 var Sandbox = require('ethereum-sandbox-client');
-var util = require('../util');
+var helper = require('ethereum-sandbox-helper');
 
 describe('Deployment', function() {
   this.timeout(60000);
@@ -8,7 +8,7 @@ describe('Deployment', function() {
   var curator = '0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826';
   var contractor = '0xdedb49385ad5b94a16f236a6890cf9e0b1e30392';
   var sandbox = new Sandbox('http://localhost:8554');
-  var compiled = util.compile('.', ['DAO.sol', 'PFOffer.sol', 'Offer.sol', 'USNRewardPayOut.sol']);
+  var compiled = helper.compile('.', ['DAO.sol', 'PFOffer.sol', 'Offer.sol', 'USNRewardPayOut.sol']);
   var creator, dao, offer;
   
   before(function(done) {

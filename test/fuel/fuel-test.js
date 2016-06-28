@@ -1,8 +1,7 @@
 var assert = require('assert');
-var _ = require('lodash');
 var async = require('async');
 var Sandbox = require('ethereum-sandbox-client');
-var util = require('../util');
+var helper = require('ethereum-sandbox-helper');
 
 describe('Fuel', function() {
   this.timeout(60000);
@@ -19,7 +18,7 @@ describe('Fuel', function() {
     }
   ];
   var sandbox = new Sandbox('http://localhost:8554');
-  var compiled = util.compile('.', ['DAO.sol', 'PFOffer.sol', 'Offer.sol', 'USNRewardPayOut.sol']);
+  var compiled = helper.compile('.', ['DAO.sol', 'PFOffer.sol', 'Offer.sol', 'USNRewardPayOut.sol']);
   if (compiled.errors) {
     console.error(compiled.errors);
     throw 'Could not compile contracts.';
@@ -82,7 +81,7 @@ describe('Fuel', function() {
           value: sandbox.web3.toWei(participant.amount, "ether")
         }, function(err, txHash) {
           if (err) cb(err);
-          else util.waitForReceipt(sandbox.web3, txHash, cb);
+          else helper.waitForReceipt(sandbox.web3, txHash, cb);
         });
       },
       function(err) {

