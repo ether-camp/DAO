@@ -38,11 +38,11 @@ describe('Deposit proposal', function() {
         from: curator,
         data: '0x' + compiled.contracts['DAO_Creator'].bytecode
       }, function(err, contract) {
-  	    if (err) cb(err);
-  	    else if (contract.address) {
-  	      creator = contract;
-  	      cb();
-  	    }
+        if (err) cb(err);
+        else if (contract.address) {
+          creator = contract;
+          cb();
+        }
       });
     }
     function deployDAO(cb) {

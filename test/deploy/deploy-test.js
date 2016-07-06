@@ -20,11 +20,11 @@ describe('Deployment', function() {
       from: curator,
       data: '0x' + compiled.contracts['DAO_Creator'].bytecode
     }, function(err, contract) {
-	    if (err) done(err);
-	    else if (contract.address) {
-	      creator = contract;
-	      done();
-	    }
+      if (err) done(err);
+      else if (contract.address) {
+        creator = contract;
+        done();
+      }
     });
   });
   
@@ -65,8 +65,8 @@ describe('Deployment', function() {
         from: contractor,
         data: '0x' + compiled.contracts['PFOffer'].bytecode
       }, function(err, contract) {
-  	    if (err) done(err);
-  	    else if (contract.address) done();
+        if (err) done(err);
+        else if (contract.address) done();
       }
     );
   });
@@ -83,11 +83,11 @@ describe('Deployment', function() {
         from: contractor,
         data: '0x' + compiled.contracts['Offer'].bytecode
       }, function(err, contract) {
-  	    if (err) done(err);
-  	    else if (contract.address) {
-  	      offer = contract;
-  	      done();
-  	    }
+        if (err) done(err);
+        else if (contract.address) {
+          offer = contract;
+          done();
+        }
       }
     );
   });
@@ -99,8 +99,8 @@ describe('Deployment', function() {
         from: contractor,
         data: '0x' + compiled.contracts['USNRewardPayOut'].bytecode
       }, function(err, contract) {
-  	    if (err) done(err);
-  	    else if (contract.address) done();
+        if (err) done(err);
+        else if (contract.address) done();
       }
     );
   });
